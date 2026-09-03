@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../main.dart';
 import '../localization/app_translations.dart';
 import 'scan_review_screen.dart';
+import 'disease_info_screen.dart';
 
 class ScanHomeScreen extends StatefulWidget {
   const ScanHomeScreen({super.key});
@@ -197,10 +199,54 @@ class _HomeTab extends StatelessWidget {
   }
 }
 
-class _HeroSection extends StatelessWidget {
+class _HeroSection extends StatefulWidget {
   const _HeroSection({required this.controller});
-
   final Animation<double> controller;
+
+  @override
+  State<_HeroSection> createState() => _HeroSectionState();
+}
+
+class _HeroSectionState extends State<_HeroSection> {
+  late PageController _pageController;
+  int _currentPage = 0;
+  Timer? _timer;
+
+  final List<String> _images = [
+    'assets/images/slider_1.jpg',
+    'assets/images/slider_2.jpg',
+    'assets/images/slider_3.jpg',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _timer = Timer.periodic(const Duration(seconds: 4), (Timer timer) {
+      if (!mounted) return;
+      setState(() {
+        if (_currentPage < _images.length - 1) {
+          _currentPage++;
+        } else {
+          _currentPage = 0;
+        }
+      });
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -208,85 +254,77 @@ class _HeroSection extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    final floatY = Tween<double>(
-      begin: -2,
-      end: 2,
-    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
-
     return SizedBox(
-      height: 235,
+      height: 250,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(26),
         child: Stack(
           children: [
+            // 1. Image Slider Background
+            Positioned.fill(
+              child: PageView.builder(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(), // Auto-slide only
+                itemCount: _images.length,
+                itemBuilder: (context, index) {
+                  return AnimatedBuilder(
+                    animation: widget.controller,
+                    builder: (context, child) {
+                       // Very subtle zoom effect
+                       final scale = 1.0 + (widget.controller.value * 0.05);
+                       return Transform.scale(
+                         scale: scale,
+                         child: child,
+                       );
+                    },
+                    child: Image.asset(
+                      _images[index],
+                      fit: BoxFit.cover,
+                    ),
+                  );
+                },
+              ),
+            ),
+            // 2. Gradient Overlay for Text Readability
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [cs.surface, cs.surfaceContainerHighest],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.8),
+                    ],
                   ),
                 ),
               ),
             ),
+            // 3. Text Content
             Positioned(
-              right: -10,
-              top: -18,
-              bottom: -18,
-              child: ClipPath(
-                clipper: _HeroCurveClipper(),
-                child: Container(width: 230, color: cs.primaryContainer),
-              ),
-            ),
-            Positioned(
-              right: 8,
-              top: 14,
-              bottom: 14,
-              child: AnimatedBuilder(
-                animation: controller,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, floatY.value),
-                    child: child,
-                  );
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: SvgPicture.asset(
-                    'assets/images/tea_plant_hero.svg',
-                    width: 200,
-                    fit: BoxFit.cover,
-                    semanticsLabel: 'Tea plant illustration',
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 18,
-              right: 210,
-              top: 18,
-              bottom: 10, // Reduced bottom constraint to allow more space
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                      Text(isSinhala ? 'ආයුබෝවන්' : 'Hello, User', style: theme.textTheme.titleMedium),
+              left: 20,
+              right: 20,
+              bottom: 40,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        isSinhala ? 'ආයුබෝවන්' : 'Hello, User', 
+                        style: theme.textTheme.titleMedium?.copyWith(color: Colors.white70)
+                      ),
                       const SizedBox(width: 6),
                       Icon(Icons.spa, size: 18, color: cs.primary),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   RichText(
                     text: TextSpan(
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        height: 1.05,
-                        color: cs.onSurface,
+                        height: 1.1,
+                        color: Colors.white,
                       ),
                       children: [
                         TextSpan(text: isSinhala ? 'තේ රෝග\n' : 'Tea Disease\n'),
@@ -297,13 +335,34 @@ class _HeroSection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
                     isSinhala ? 'තේ වගාවේ රෝග කල්තියා හඳුනාගෙන වගාව ආරක්ෂා කරගන්න.' : 'Detect tea plant diseases early and keep your plants healthy.',
-                    style: theme.textTheme.bodyMedium,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
                   ),
                 ],
               ),
+            ),
+            // 4. Dots Indicator
+            Positioned(
+              bottom: 16,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _images.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 6,
+                    width: _currentPage == index ? 20 : 6,
+                    decoration: BoxDecoration(
+                      color: _currentPage == index ? cs.primary : Colors.white54,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -311,33 +370,6 @@ class _HeroSection extends StatelessWidget {
       ),
     );
   }
-}
-
-class _HeroCurveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.moveTo(size.width * 0.22, 0);
-    path.quadraticBezierTo(
-      size.width * 0.92,
-      size.height * 0.10,
-      size.width,
-      size.height * 0.36,
-    );
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.quadraticBezierTo(
-      size.width * 0.18,
-      size.height * 0.78,
-      size.width * 0.22,
-      0,
-    );
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
 class _DetectDiseaseCard extends StatelessWidget {
@@ -463,24 +495,110 @@ class _CommonDiseasesRow extends StatelessWidget {
 
   static const _items = <_DiseaseCardData>[
     _DiseaseCardData(
-      title: 'Tea Blister Blight',
+      titleEn: 'Tea Blister Blight',
+      titleSi: 'බ්ලිස්ටර් බ්ලයිට්',
       subtitle: 'Exobasidium vexans',
-      asset: 'assets/images/disease_blister_blight.svg',
+      asset: 'assets/images/real_blister_blight.jpg',
+      symptomsEn: [
+        'Small translucent spots on young leaves.',
+        'White blister-like swellings on the underside of leaves.',
+        'Curling and distortion of tender shoots.',
+      ],
+      symptomsSi: [
+        'ළපටි කොළ වල කුඩා පාරභාසක ලප ඇතිවීම.',
+        'කොළ යටි පැත්තේ සුදු පැහැති බිබිලි මතු වීම.',
+        'ළපටි දළු හැකිලී විකෘති වීම.',
+      ],
+      recommendationsEn: [
+        'Isolate the affected section immediately.',
+        'Apply copper-based fungicides.',
+        'Remove heavily infected shoots and leaves.',
+        'Ensure timely plucking to reduce spread.',
+      ],
+      recommendationsSi: [
+        'රෝගී කොටස් වහාම වෙන් කරන්න.',
+        'කොපර් අඩංගු දිලීර නාශකයක් යොදන්න.',
+        'දරුණු ලෙස රෝගී වූ දළු සහ කොළ කඩා ඉවත් කරන්න.',
+        'රෝගය පැතිරීම අවම කිරීමට නියමිත කාලයට දළු නෙළන්න.',
+      ],
     ),
     _DiseaseCardData(
-      title: 'Tea Brown Blight',
+      titleEn: 'Tea Brown Blight',
+      titleSi: 'බ්‍රවුන් බ්ලයිට්',
       subtitle: 'Colletotrichum spp.',
-      asset: 'assets/images/disease_brown_blight.svg',
+      asset: 'assets/images/real_brown_blight.jpg',
+      symptomsEn: [
+        'Yellow-brown spots on older leaves.',
+        'Spots develop into large brown patches with concentric rings.',
+        'Leaves eventually dry up and fall off.',
+      ],
+      symptomsSi: [
+        'පැරණි කොළවල කහ-දුඹුරු ලප ඇතිවීම.',
+        'ලප විශාල වී වෘත්තාකාර දුඹුරු පැල්ලම් බවට පත්වීම.',
+        'අවසානයේ කොළ වියළී හැලී යාම.',
+      ],
+      recommendationsEn: [
+        'Reduce shade if it is too dense.',
+        'Collect and dispose of fallen infected leaves.',
+        'Improve airflow by light pruning.',
+      ],
+      recommendationsSi: [
+        'සෙවණ වැඩි නම් එය අඩු කරන්න.',
+        'බිමට වැටී ඇති රෝගී කොළ එකතු කර විනාශ කරන්න.',
+        'සුළු කප්පාදුවක් මගින් වාතාශ්‍රය වැඩි කරන්න.',
+      ],
     ),
     _DiseaseCardData(
-      title: 'Tea Red Rust',
+      titleEn: 'Tea Red Rust',
+      titleSi: 'රෙඩ් රස්ට්',
       subtitle: 'Cephaleuros virescens',
-      asset: 'assets/images/disease_red_rust.svg',
+      asset: 'assets/images/real_red_rust.jpg',
+      symptomsEn: [
+        'Orange-red or rusty raised spots on the upper leaf surface.',
+        'Spots may merge to form larger rusty patches.',
+        'Usually indicates poor plant vigor and nutritional stress.',
+      ],
+      symptomsSi: [
+        'කොළ මතුපිට තැඹිලි-රතු පැහැති රළු ලප ඇතිවීම.',
+        'මෙම ලප එකතු වී විශාල රතු පැල්ලම් සෑදීම.',
+        'බොහෝවිට ශාකයේ පෝෂණ ඌනතාවයක් පෙන්නුම් කරයි.',
+      ],
+      recommendationsEn: [
+        'Check for nutritional stress and apply proper fertilizers.',
+        'Ensure adequate drainage and avoid waterlogging.',
+        'Prune affected branches if the infection is severe.',
+      ],
+      recommendationsSi: [
+        'පෝෂණ ඌනතා පරීක්ෂා කර නිසි පොහොර යොදන්න.',
+        'ජලය හොඳින් බැසයාමට සලස්වා ජලය රැඳීම වළක්වන්න.',
+        'රෝගය දරුණු නම් රෝගී අතු කපා ඉවත් කරන්න.',
+      ],
     ),
     _DiseaseCardData(
-      title: 'Tea Powdery Mildew',
+      titleEn: 'Tea Powdery Mildew',
+      titleSi: 'පවුඩරි මිල්ඩියු',
       subtitle: 'Erysiphe polygonii',
-      asset: 'assets/images/disease_powdery_mildew.svg',
+      asset: 'assets/images/real_powdery_mildew.jpg',
+      symptomsEn: [
+        'White, powdery fungal growth mostly on young leaves.',
+        'Infected leaves become curled and distorted.',
+        'Premature leaf drop in severe cases.',
+      ],
+      symptomsSi: [
+        'ළපටි කොළ සහ දළු මත සුදු පැහැති පිටි වැනි දිලීර වර්ධනය වීම.',
+        'රෝගී වූ කොළ හැකිලී විකෘති වීම.',
+        'දරුණු තත්ත්වයකදී කොළ නොමේරී හැලී යාම.',
+      ],
+      recommendationsEn: [
+        'Apply sulfur-based fungicides.',
+        'Improve air circulation in the field.',
+        'Avoid high humidity and damp conditions.',
+      ],
+      recommendationsSi: [
+        'සල්ෆර් අඩංගු දිලීර නාශක යොදන්න.',
+        'වගාවේ වාතය හොඳින් ගමන් කිරීමට සලස්වන්න.',
+        'අධික ආර්ද්‍රතාවය සහ තෙත් පරිසරය වළක්වාගන්න.',
+      ],
     ),
   ];
 
@@ -500,14 +618,24 @@ class _CommonDiseasesRow extends StatelessWidget {
 
 class _DiseaseCardData {
   const _DiseaseCardData({
-    required this.title,
+    required this.titleEn,
+    required this.titleSi,
     required this.subtitle,
     required this.asset,
+    required this.symptomsEn,
+    required this.symptomsSi,
+    required this.recommendationsEn,
+    required this.recommendationsSi,
   });
 
-  final String title;
+  final String titleEn;
+  final String titleSi;
   final String subtitle;
   final String asset;
+  final List<String> symptomsEn;
+  final List<String> symptomsSi;
+  final List<String> recommendationsEn;
+  final List<String> recommendationsSi;
 }
 
 class _DiseaseCard extends StatelessWidget {
@@ -517,6 +645,7 @@ class _DiseaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isSinhala = isSinhalaMode.value;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
@@ -524,44 +653,66 @@ class _DiseaseCard extends StatelessWidget {
       width: 156,
       child: Card(
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Container(
-                color: cs.surfaceContainerHighest,
-                padding: const EdgeInsets.all(12),
-                child: SvgPicture.asset(
-                  data.asset,
-                  fit: BoxFit.contain,
-                  semanticsLabel: data.title,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => DiseaseInfoScreen(
+                  title: isSinhala ? data.titleSi : data.titleEn,
+                  subtitle: data.subtitle,
+                  assetPath: data.asset,
+                  symptoms: isSinhala ? data.symptomsSi : data.symptomsEn,
+                  recommendations: isSinhala ? data.recommendationsSi : data.recommendationsEn,
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    data.subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Container(
+                  color: cs.surfaceContainerHighest,
+                  padding: data.asset.endsWith('.svg') ? const EdgeInsets.all(12) : EdgeInsets.zero,
+                  child: data.asset.endsWith('.svg') 
+                    ? SvgPicture.asset(
+                        data.asset,
+                        fit: BoxFit.contain,
+                        semanticsLabel: isSinhala ? data.titleSi : data.titleEn,
+                      )
+                    : Image.asset(
+                        data.asset,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isSinhala ? data.titleSi : data.titleEn,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      data.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

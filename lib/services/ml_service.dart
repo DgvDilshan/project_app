@@ -9,12 +9,27 @@ class MLService {
   Interpreter? _interpreter;
   List<String> _labels = [];
 
+  Future<void> _loadModel() async {
+    try {
+      // We will now use the hybrid model that doesn't have FlexErf
+      final options = InterpreterOptions();
+      // No FlexDelegate needed since we removed Erf!
+      _interpreter = await Interpreter.fromAsset(
+        'assets/models/hybrid_agrovision_model.tflite',
+        options: options,
+      );
+      
+      final inputShape = _interpreter!.getInputTensor(0).shape;
+      final inputType = _interpreter!.getInputTensor(0).type;
+      debugPrint('MLService: Model loaded successfully. Input shape: $inputShape, Type: $inputType');
+    } catch (e) {
+      debugPrint('MLService: Error loading model: $e');
+    }
+  }
+
   Future<void> initialize() async {
     try {
-      // Load model
-      _interpreter = await Interpreter.fromAsset(
-        'assets/models/agrovision_quantized.tflite',
-      );
+      await _loadModel();
 
       // Load labels
       final labelsData = await rootBundle.loadString(
@@ -158,12 +173,16 @@ class MLService {
           image.height,
           (y) => List.generate(image.width, (x) {
             var pixel = image.getPixel(x, y);
-            // Standard TFLite preprocessing: RGB, scale to [0,1]
+            // PyTorch standard preprocessing: RGB, scale to [0,1], then normalize
             double r = pixel.r.toDouble() / 255.0;
             double g = pixel.g.toDouble() / 255.0;
             double b = pixel.b.toDouble() / 255.0;
             
-            return [r, g, b];
+            return [
+              (r - 0.485) / 0.229,
+              (g - 0.456) / 0.224,
+              (b - 0.406) / 0.225,
+            ];
           }),
         ),
       );
@@ -221,7 +240,7 @@ class MLService {
         maxIndex = i;
       }
     }
-    
+
     return {
       'disease': _labels.length > maxIndex ? _labels[maxIndex] : 'Unknown',
       'confidence': maxScore,

@@ -75,7 +75,7 @@ class DiagnosisResultScreen extends StatelessWidget {
                     style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
-                  ...result.suggestions.map((s) => _buildSuggestionTile(context, s)),
+                  ...result.suggestions.asMap().entries.map((e) => _buildSuggestionTile(context, e.key, e.value)),
                   const SizedBox(height: 32),
                   FilledButton.icon(
                     onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
@@ -211,39 +211,73 @@ class DiagnosisResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSuggestionTile(BuildContext context, String suggestion) {
+  Widget _buildSuggestionTile(BuildContext context, int index, String suggestion) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.check_circle, color: cs.primary, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              suggestion,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                height: 1.4,
-                color: cs.onSurface,
-              ),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: cs.primaryContainer.withValues(alpha: 0.4)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 8,
+                color: cs.primary,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${index + 1}',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: cs.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          suggestion,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            height: 1.4,
+                            color: cs.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
