@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="720" height="720" viewBox="0 0 720 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- Original, simplified tea sprout illustration (no external artwork). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#DFF2E1"/>
+      <stop offset="1" stop-color="#F4FBF5"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2E7D32"/>
+      <stop offset="1" stop-color="#66BB6A"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="720" height="720" rx="64" fill="url(#bg)"/>
+
+  <!-- Stem -->
+  <path d="M360 610 C356 520 356 430 360 330" fill="none" stroke="#1B5E20" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- Left leaf -->
+  <path d="M355 360
+           C300 335 250 350 220 395
+           C190 440 205 500 260 535
+           C312 516 346 476 355 420
+           C360 392 360 376 355 360 Z"
+        fill="url(#leaf)"/>
+  <path d="M318 382 C286 414 266 448 254 490" fill="none" stroke="#1B5E20" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Right leaf -->
+  <path d="M365 330
+           C420 305 475 315 510 358
+           C545 402 534 465 480 510
+           C425 498 390 458 374 404
+           C366 376 362 348 365 330 Z"
+        fill="url(#leaf)"/>
+  <path d="M404 350 C440 388 462 424 474 468" fill="none" stroke="#1B5E20" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Top bud -->
+  <path d="M360 300
+           C330 290 312 268 312 242
+           C312 214 334 190 360 190
+           C386 190 408 214 408 242
+           C408 268 390 290 360 300 Z"
+        fill="url(#leaf)"/>
+  <path d="M360 210 C352 236 352 262 360 288" fill="none" stroke="#1B5E20" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+</svg>

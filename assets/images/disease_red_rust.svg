@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#43A047"/>
+      <stop offset="1" stop-color="#A5D6A7"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 64 C170 96 112 166 96 256 C80 352 140 430 256 448 C372 430 432 352 416 256 C400 166 342 96 256 64 Z" fill="url(#leaf)"/>
+  <path d="M256 96 C244 170 244 250 256 416" fill="none" stroke="#1B5E20" stroke-width="14" stroke-linecap="round"/>
+  <!-- Rust dots -->
+  <circle cx="180" cy="230" r="10" fill="#D84315" opacity="0.85"/>
+  <circle cx="220" cy="205" r="7" fill="#D84315" opacity="0.85"/>
+  <circle cx="240" cy="260" r="9" fill="#D84315" opacity="0.85"/>
+  <circle cx="310" cy="220" r="8" fill="#D84315" opacity="0.85"/>
+  <circle cx="330" cy="265" r="11" fill="#D84315" opacity="0.85"/>
+  <circle cx="270" cy="310" r="8" fill="#D84315" opacity="0.8"/>
+</svg>

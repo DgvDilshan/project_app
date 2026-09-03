@@ -1,0 +1,3 @@
+Blister_Blight
+Healthy_leaves
+Other disease

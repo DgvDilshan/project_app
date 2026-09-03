@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#43A047"/>
+      <stop offset="1" stop-color="#A5D6A7"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 64 C170 96 112 166 96 256 C80 352 140 430 256 448 C372 430 432 352 416 256 C400 166 342 96 256 64 Z" fill="url(#leaf)"/>
+  <path d="M256 96 C244 170 244 250 256 416" fill="none" stroke="#1B5E20" stroke-width="14" stroke-linecap="round"/>
+  <!-- Powdery patches -->
+  <path d="M170 220 C200 200 235 205 255 235 C235 260 200 270 170 255 C155 245 155 230 170 220 Z" fill="#FFFFFF" opacity="0.55"/>
+  <path d="M285 245 C315 225 350 235 360 265 C338 288 305 296 280 280 C268 270 270 255 285 245 Z" fill="#FFFFFF" opacity="0.55"/>
+  <path d="M210 300 C235 286 262 292 274 312 C260 332 234 342 212 332 C202 326 200 308 210 300 Z" fill="#FFFFFF" opacity="0.5"/>
+</svg>
