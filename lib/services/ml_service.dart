@@ -13,7 +13,7 @@ class MLService {
     try {
       // Load model
       _interpreter = await Interpreter.fromAsset(
-        'assets/models/hybrid_agrovision_model.tflite',
+        'assets/models/agrovision_quantized.tflite',
       );
 
       // Load labels
@@ -158,16 +158,12 @@ class MLService {
           image.height,
           (y) => List.generate(image.width, (x) {
             var pixel = image.getPixel(x, y);
-            // PyTorch standard preprocessing: RGB, scale to [0,1], then normalize
+            // Standard TFLite preprocessing: RGB, scale to [0,1]
             double r = pixel.r.toDouble() / 255.0;
             double g = pixel.g.toDouble() / 255.0;
             double b = pixel.b.toDouble() / 255.0;
             
-            return [
-              (r - 0.485) / 0.229,
-              (g - 0.456) / 0.224,
-              (b - 0.406) / 0.225,
-            ];
+            return [r, g, b];
           }),
         ),
       );
