@@ -121,7 +121,7 @@ class RealLeafDiagnosisService implements LeafDiagnosisService {
       ],
       TeaLeafDisease.blisterBlight => isSinhala ? <String>[
         'බ්ලිස්ටර් බ්ලයිට් (Blister Blight) රෝගය බවට සැක කෙරේ — රෝගී කොටස් වෙන් කරන්න.',
-        'වහාම කොපර් (Copper) අඩංගු දිලීර නාශකයක් යොදන්න.',
+        'රසායනික ප්‍රතිකාර හෝ දිලීර නාශක යෙදීම සඳහා කරුණාකර සුදුසුකම් ලත් කෘෂි නිලධාරියෙකුගේ (Field Officer) උපදෙස් ලබාගන්න.',
         'දරුණු ලෙස රෝගී වූ දළු සහ කොළ කඩා ඉවත් කරන්න.',
         'රෝගය පැතිරීම අවම කිරීම සඳහා නියමිත කාලයට දළු නෙළන්න.',
         ...base,
