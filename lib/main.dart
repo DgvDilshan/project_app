@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'localization/app_translations.dart';
-import 'screens/scan_home_screen.dart';
+import 'screens/auth_gate.dart';
+import 'services/sync_manager.dart';
 
 // Global state for language (true = Sinhala, false = English)
 final ValueNotifier<bool> isSinhalaMode = ValueNotifier<bool>(true);
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Supabase.initialize(
+    url: 'https://yqaqsrlmkedinqmbapqu.supabase.co',
+    anonKey: 'sb_publishable_OXUq1ezIwJgJQAeARdVY1g_5W9l7FZI',
+  );
+
+  // Start listening to connectivity for background syncs
+  SyncManager.instance.startListening();
+
   runApp(const TeaDiseaseApp());
 }
 
@@ -25,7 +37,7 @@ class TeaDiseaseApp extends StatelessWidget {
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
           ),
-          home: const ScanHomeScreen(),
+          home: const AuthGate(),
         );
       },
     );

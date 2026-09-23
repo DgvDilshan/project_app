@@ -20,7 +20,7 @@ class AppTranslations {
       
       // Error messages
       'not_tea_leaf': 'Not a tea leaf',
-      'not_tea_leaf_desc': 'The image does not appear to be a tea leaf or contains very little green color. Please capture a clear image of a tea leaf.',
+      'not_tea_leaf_desc': 'The image does not appear to be a tea leaf. Please capture a clear image of a tea leaf.',
       'uncertain': 'UNCERTAIN PATHOLOGY',
       'uncertain_desc': 'Confidence is below 50% threshold.',
       'processing_error': 'Error analyzing image. Please try again.',
@@ -34,7 +34,7 @@ class AppTranslations {
       'blister_blight': 'Blister Blight',
       'grey_blight': 'Grey Blight',
       'red_rust': 'Red Rust',
-      'unknown': 'Unknown',
+      'unknown': 'Other Disease',
       
       // Severity Levels
       'high': 'High',
@@ -62,7 +62,7 @@ class AppTranslations {
       
       // Error messages
       'not_tea_leaf': 'තේ කොළයක් නොවේ',
-      'not_tea_leaf_desc': 'මෙය තේ කොළයක් ලෙස හඳුනාගත නොහැක (ප්‍රමාණවත් තරම් කොළ පැහැයක් නොමැත). කරුණාකර තේ කොළයක පැහැදිලි ඡායාරූපයක් ගන්න.',
+      'not_tea_leaf_desc': 'මෙය තේ කොළයක් ලෙස හඳුනාගත නොහැක. කරුණාකර තේ කොළයක පැහැදිලි ඡායාරූපයක් ගන්න.',
       'uncertain': 'අවිනිශ්චිත රෝග ලක්ෂණ',
       'uncertain_desc': 'හඳුනාගැනීමේ විශ්වාසනීයත්වය 50% ට වඩා අඩුය.',
       'processing_error': 'දෝෂයකි. කරුණාකර නැවත උත්සාහ කරන්න.',
@@ -76,7 +76,7 @@ class AppTranslations {
       'blister_blight': 'බ්ලිස්ටර් බ්ලයිට් (Blister Blight)',
       'grey_blight': 'ග්‍රේ බ්ලයිට් (Grey Blight)',
       'red_rust': 'රෙඩ් රස්ට් (Red Rust)',
-      'unknown': 'හඳුනාගත නොහැක',
+      'unknown': 'වෙනත් රෝගයක්',
       
       // Severity Levels
       'high': 'වැඩි අවදානම් (High)',
