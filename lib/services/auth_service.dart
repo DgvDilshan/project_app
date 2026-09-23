@@ -54,7 +54,7 @@ class AuthService {
     return response;
   }
 
-  Future<AuthResponse> signup(String email, String password, String fullName, String phone, String role, {int? routeIndex, String? plotNumber}) async {
+  Future<AuthResponse> signup(String email, String password, String fullName, String phone, String role, {int? routeIndex, String? plotNumber, String? collectorId}) async {
     final response = await _supabase.auth.signUp(email: email, password: password);
     
     if (response.user != null) {
@@ -66,6 +66,7 @@ class AuthService {
         'role': role,
         if (routeIndex != null) 'route_index': routeIndex,
         if (plotNumber != null) 'plot_number': plotNumber,
+        if (collectorId != null) 'collector_id': collectorId,
       });
 
       await _cacheUserSession(response.user!.id, role, fullName, routeIndex: routeIndex);

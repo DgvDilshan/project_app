@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import 'auth_gate.dart';
 
@@ -20,6 +21,39 @@ class _SignupScreenState extends State<SignupScreen> {
   
   String _selectedRole = 'farmer';
   bool _isLoading = false;
+  
+  List<Map<String, dynamic>> _collectors = [];
+  String? _selectedCollectorId;
+  bool _isLoadingCollectors = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCollectors();
+  }
+
+  Future<void> _fetchCollectors() async {
+    setState(() => _isLoadingCollectors = true);
+    try {
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select('id, full_name')
+          .eq('role', 'collector');
+      
+      if (mounted) {
+        setState(() {
+          _collectors = List<Map<String, dynamic>>.from(response);
+          if (_collectors.isNotEmpty) {
+            _selectedCollectorId = _collectors.first['id'] as String;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching collectors: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingCollectors = false);
+    }
+  }
 
   Future<void> _signup() async {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -35,12 +69,17 @@ class _SignupScreenState extends State<SignupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your Plot Number')));
       return;
     }
+    if (_selectedRole == 'farmer' && _selectedCollectorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a Collector')));
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
       final routeIndex = int.tryParse(_routeIndexController.text.trim()) ?? 0;
 
       final plotNumber = _selectedRole == 'farmer' ? _plotNumberController.text.trim() : null;
+      final collectorId = _selectedRole == 'farmer' ? _selectedCollectorId : null;
 
       await AuthService.instance.signup(
         _emailController.text.trim(),
@@ -50,6 +89,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _selectedRole,
         routeIndex: routeIndex,
         plotNumber: plotNumber,
+        collectorId: collectorId,
       );
       if (!mounted) return;
       // Reload AuthGate to redirect based on role
@@ -169,6 +209,42 @@ class _SignupScreenState extends State<SignupScreen> {
                               'Plot Number (ඉඩමේ අංකය)', 
                               false,
                             ),
+                            const SizedBox(height: 12),
+                            _isLoadingCollectors 
+                              ? const CircularProgressIndicator(color: Colors.green)
+                              : DropdownButtonFormField<String>(
+                                  value: _selectedCollectorId,
+                                  dropdownColor: Colors.black87,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    labelText: 'Select Collector (දළු එකතු කරන්නා)',
+                                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                                    filled: true,
+                                    fillColor: Colors.black.withOpacity(0.1),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      borderSide: const BorderSide(color: Colors.white),
+                                    ),
+                                  ),
+                                  items: _collectors.map((c) {
+                                    return DropdownMenuItem<String>(
+                                      value: c['id'] as String,
+                                      child: Text(c['full_name'] as String? ?? 'Unknown'),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) setState(() => _selectedCollectorId = val);
+                                  },
+                                ),
                           ],
                           const SizedBox(height: 12),
                           _buildTextField(

@@ -52,38 +52,37 @@ class GatekeeperService {
       final resizedImage = img.copyResize(image, width: 224, height: 224);
 
       // Preprocess input: MobileNetV2 expects values in range [-1, 1]
-      var inputBuffer = List.generate(
-        1,
-        (i) => List.generate(
-          224,
-          (y) => List.generate(224, (x) {
-            var pixel = resizedImage.getPixel(x, y);
-            double r = (pixel.r.toDouble() / 127.5) - 1.0;
-            double g = (pixel.g.toDouble() / 127.5) - 1.0;
-            double b = (pixel.b.toDouble() / 127.5) - 1.0;
-            return [r, g, b];
-          }),
-        ),
-      );
+      // 2. Prepare input tensor (1, 224, 224, 3) Float32
+      // The MobileNetV2 model expects pixels to be in the range [-1, 1]
+      const int inputSize = 224;
+      var input = List.generate(1, (i) => List.generate(inputSize, (y) => List.generate(inputSize, (x) => List.filled(3, 0.0))));
 
-      var outputBuffer = List.generate(1, (_) => List<double>.filled(1, 0.0));
-
-      _interpreter!.run(inputBuffer, outputBuffer);
-
-      double teaLeafProbability = outputBuffer[0][0];
-      debugPrint('GatekeeperService: Tea Leaf Probability = $teaLeafProbability');
-
-      // Class 0: not_tea_leaf
-      // Class 1: tea_leaf
-      // Using a highly strict threshold (0.92) because the TFLite model tends to output
-      // high probabilities (0.7-0.9) for very green objects like mango leaves or mantises.
-      if (teaLeafProbability >= 0.92) {
-        return true; // Confidently a tea leaf!
-      } else {
-        return false; // Reject: likely mango leaf, insect, person, or generic leaf
+      for (int y = 0; y < inputSize; y++) {
+        for (int x = 0; x < inputSize; x++) {
+          final pixel = resizedImage.getPixel(x, y);
+          // Normalize to [-1, 1]
+          input[0][y][x][0] = (pixel.r / 127.5) - 1.0;
+          input[0][y][x][1] = (pixel.g / 127.5) - 1.0;
+          input[0][y][x][2] = (pixel.b / 127.5) - 1.0;
+        }
       }
+
+      // 3. Prepare output tensor (1, 1)
+      var output = List.generate(1, (i) => List.filled(1, 0.0));
+
+      // 4. Run inference
+      _interpreter!.run(input, output);
+
+      // 5. Interpret output
+      // Class 0: not_tea_leaf, Class 1: tea_leaf (Sigmoid output)
+      double teaLeafProbability = output[0][0];
+      debugPrint('Gatekeeper: Tea leaf probability = $teaLeafProbability');
+
+      // Use a balanced threshold (0.5). If we make it too high, diseased tea leaves might be rejected.
+      return teaLeafProbability > 0.5;
+
     } catch (e) {
-      debugPrint('Error during Gatekeeper inference: $e');
+      debugPrint('Error running gatekeeper model: $e');
       return true; // Fallback
     }
   }

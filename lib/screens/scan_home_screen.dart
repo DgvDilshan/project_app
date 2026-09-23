@@ -6,6 +6,10 @@ import '../main.dart';
 import '../localization/app_translations.dart';
 import 'scan_review_screen.dart';
 import 'disease_info_screen.dart';
+import 'history_tab.dart';
+import 'tips_tab.dart';
+import 'profile_tab.dart';
+import 'pickup_request_screen.dart';
 
 class ScanHomeScreen extends StatefulWidget {
   const ScanHomeScreen({super.key});
@@ -42,9 +46,9 @@ class _ScanHomeScreenState extends State<ScanHomeScreen>
         index: _tabIndex,
         children: [
           _HomeTab(controller: _controller),
-          _PlaceholderTab(title: isSinhala ? 'ඉතිහාසය' : 'History'),
-          _PlaceholderTab(title: isSinhala ? 'උපදෙස්' : 'Tips'),
-          _PlaceholderTab(title: isSinhala ? 'ගිණුම' : 'Profile'),
+          const HistoryTab(),
+          const TipsTab(),
+          const ProfileTab(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -160,6 +164,61 @@ class _HomeTab extends StatelessWidget {
                 _DetectDiseaseCard(
                   controller: controller,
                   onTap: () => _showDetectDiseaseSheet(context),
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PickupRequestScreen()));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC8E6C9), // Slightly lighter green
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(Icons.local_shipping_outlined, color: Colors.green.shade800, size: 28),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isSinhala ? 'දළු ලබාදීම' : 'Request Pickup',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isSinhala 
+                                  ? 'ඔබගේ තේ දළු ලබාදීම සඳහා එකතු කරන්නෙකු ගෙන්වා ගන්න.' 
+                                  : 'Request a collector to pick up your harvest.',
+                                style: TextStyle(color: Colors.black87.withOpacity(0.7), fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.chevron_right, color: Colors.green.shade800),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 18),
                 Row(
