@@ -16,70 +16,63 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _routeIndexController = TextEditingController();
-  final _plotNumberController = TextEditingController();
+  
+  // New Fields for Route & Factory
+  final _factoryCodeController = TextEditingController();
+  final _supplierNumberController = TextEditingController();
   
   String _selectedRole = 'farmer';
   bool _isLoading = false;
   
-  List<Map<String, dynamic>> _collectors = [];
-  String? _selectedCollectorId;
-  bool _isLoadingCollectors = false;
+  bool _linkFactory = false; // Checkbox for optional factory linkage
+  String? _selectedRoute;
+  
+  // Mock routes for demo purposes (Since we are using Factory Code)
+  final List<String> _demoRoutes = [
+    'Line 1 (North)',
+    'Line 2 (South)',
+    'Line 3 (East)',
+    'Line 4 (West)',
+  ];
 
   @override
-  void initState() {
-    super.initState();
-    _fetchCollectors();
-  }
-
-  Future<void> _fetchCollectors() async {
-    setState(() => _isLoadingCollectors = true);
-    try {
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select('id, full_name')
-          .eq('role', 'collector');
-      
-      if (mounted) {
-        setState(() {
-          _collectors = List<Map<String, dynamic>>.from(response);
-          if (_collectors.isNotEmpty) {
-            _selectedCollectorId = _collectors.first['id'] as String;
-          }
-        });
-      }
-    } catch (e) {
-      debugPrint('Error fetching collectors: $e');
-    } finally {
-      if (mounted) setState(() => _isLoadingCollectors = false);
-    }
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _factoryCodeController.dispose();
+    _supplierNumberController.dispose();
+    super.dispose();
   }
 
   Future<void> _signup() async {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all basic fields')));
       return;
     }
 
-    if (_routeIndexController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your Route Number')));
-      return;
+    // Validation for Collector
+    if (_selectedRole == 'collector') {
+      if (_factoryCodeController.text.isEmpty || _selectedRoute == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Collectors must provide Factory Code and Route')));
+        return;
+      }
     }
-    if (_selectedRole == 'farmer' && _plotNumberController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your Plot Number')));
-      return;
-    }
-    if (_selectedRole == 'farmer' && _selectedCollectorId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a Collector')));
-      return;
+
+    // Validation for Farmer if they chose to link
+    if (_selectedRole == 'farmer' && _linkFactory) {
+      if (_factoryCodeController.text.isEmpty || _selectedRoute == null || _supplierNumberController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please complete Factory linking details')));
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
     try {
-      final routeIndex = int.tryParse(_routeIndexController.text.trim()) ?? 0;
-
-      final plotNumber = _selectedRole == 'farmer' ? _plotNumberController.text.trim() : null;
-      final collectorId = _selectedRole == 'farmer' ? _selectedCollectorId : null;
+      final factoryCode = (_selectedRole == 'collector' || _linkFactory) ? _factoryCodeController.text.trim() : null;
+      final routeName = (_selectedRole == 'collector' || _linkFactory) ? _selectedRoute : null;
+      final supplierNumber = (_selectedRole == 'farmer' && _linkFactory) ? _supplierNumberController.text.trim() : null;
 
       await AuthService.instance.signup(
         _emailController.text.trim(),
@@ -87,12 +80,11 @@ class _SignupScreenState extends State<SignupScreen> {
         _nameController.text.trim(),
         _phoneController.text.trim(),
         _selectedRole,
-        routeIndex: routeIndex,
-        plotNumber: plotNumber,
-        collectorId: collectorId,
+        factoryCode: factoryCode,
+        routeName: routeName,
+        supplierNumber: supplierNumber,
       );
       if (!mounted) return;
-      // Reload AuthGate to redirect based on role
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AuthGate()),
         (route) => false,
@@ -163,96 +155,104 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          _buildTextField(_nameController, 'Full Name', false),
+                          _buildTextField(_nameController, 'Full Name (සම්පූර්ණ නම)', false),
                           const SizedBox(height: 12),
-                          _buildTextField(_phoneController, 'Phone Number', false, keyboardType: TextInputType.phone),
+                          _buildTextField(_phoneController, 'Phone Number (දුරකථන අංකය)', false, keyboardType: TextInputType.phone),
                           const SizedBox(height: 12),
-                          _buildTextField(_emailController, 'Email', false, keyboardType: TextInputType.emailAddress),
+                          _buildTextField(_emailController, 'Email (විද්‍යුත් තැපෑල)', false, keyboardType: TextInputType.emailAddress),
                           const SizedBox(height: 12),
-                          _buildTextField(_passwordController, 'Password', true),
+                          _buildTextField(_passwordController, 'Password (මුරපදය)', true),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
                             value: _selectedRole,
                             dropdownColor: Colors.black87,
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
-                              labelText: 'Role',
+                              labelText: 'Role (ගිණුම් වර්ගය)',
                               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                               filled: true,
                               fillColor: Colors.black.withOpacity(0.1),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Colors.white),
                               ),
                             ),
                             items: const [
-                              DropdownMenuItem(value: 'farmer', child: Text('Farmer (තේ වතු හිමියා)')),
+                              DropdownMenuItem(value: 'farmer', child: Text('Farmer (ගොවියා)')),
                               DropdownMenuItem(value: 'collector', child: Text('Collector (දළු එකතු කරන්නා)')),
                             ],
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedRole = val);
+                              if (val != null) setState(() {
+                                _selectedRole = val;
+                                // Collectors must always link to a factory route
+                                if (val == 'collector') _linkFactory = true;
+                              });
                             },
                           ),
-                          if (_selectedRole == 'farmer') ...[
-                            const SizedBox(height: 12),
-                            _buildTextField(
-                              _plotNumberController, 
-                              'Plot Number (ඉඩමේ අංකය)', 
-                              false,
+                          const SizedBox(height: 16),
+                          
+                          // Factory Linking Section
+                          if (_selectedRole == 'farmer')
+                            CheckboxListTile(
+                              title: const Text('Link to Tea Factory (Optional)', style: TextStyle(color: Colors.white, fontSize: 14)),
+                              subtitle: const Text('Required for Pickup Requests', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              value: _linkFactory,
+                              activeColor: Colors.green,
+                              checkColor: Colors.white,
+                              side: const BorderSide(color: Colors.white),
+                              onChanged: (val) {
+                                setState(() => _linkFactory = val ?? false);
+                              },
                             ),
+
+                          if (_linkFactory || _selectedRole == 'collector') ...[
                             const SizedBox(height: 12),
-                            _isLoadingCollectors 
-                              ? const CircularProgressIndicator(color: Colors.green)
-                              : DropdownButtonFormField<String>(
-                                  value: _selectedCollectorId,
-                                  dropdownColor: Colors.black87,
-                                  style: const TextStyle(color: Colors.white),
-                                  decoration: InputDecoration(
-                                    labelText: 'Select Collector (දළු එකතු කරන්නා)',
-                                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                                    filled: true,
-                                    fillColor: Colors.black.withOpacity(0.1),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: Colors.white),
-                                    ),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.green.withOpacity(0.5)),
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildTextField(
+                                    _factoryCodeController, 
+                                    'Factory Code (උදා: ROS-123)', 
+                                    false
                                   ),
-                                  items: _collectors.map((c) {
-                                    return DropdownMenuItem<String>(
-                                      value: c['id'] as String,
-                                      child: Text(c['full_name'] as String? ?? 'Unknown'),
-                                    );
-                                  }).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _selectedCollectorId = val);
-                                  },
-                                ),
+                                  const SizedBox(height: 12),
+                                  DropdownButtonFormField<String>(
+                                    value: _selectedRoute,
+                                    dropdownColor: Colors.black87,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      labelText: 'Collection Route (දළු මාර්ගය)',
+                                      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                                      filled: true,
+                                      fillColor: Colors.black.withOpacity(0.1),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    items: _demoRoutes.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                                    onChanged: (val) {
+                                      setState(() => _selectedRoute = val);
+                                    },
+                                  ),
+                                  if (_selectedRole == 'farmer') ...[
+                                    const SizedBox(height: 12),
+                                    _buildTextField(
+                                      _supplierNumberController, 
+                                      'Supplier Number (සැපයුම්කරු අංකය)', 
+                                      false,
+                                      keyboardType: TextInputType.number,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
                           ],
-                          const SizedBox(height: 12),
-                          _buildTextField(
-                            _routeIndexController, 
-                            'Route Number (කලාප අංකය - උදා: 1)', 
-                            false, 
-                            keyboardType: TextInputType.number,
-                          ),
+                          
                           const SizedBox(height: 24),
                           _isLoading 
                             ? const CircularProgressIndicator(color: Colors.green)
