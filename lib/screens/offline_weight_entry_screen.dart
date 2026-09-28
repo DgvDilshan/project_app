@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
+import '../utils/custom_snackbar.dart';
 import 'package:uuid/uuid.dart';
 import '../services/local_database_helper.dart';
 import '../services/sync_manager.dart';
@@ -119,7 +120,8 @@ class _OfflineWeightEntryScreenState extends State<OfflineWeightEntryScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Record Weight')),
-      body: Padding(
+      body: SingleChildScrollView(
+        child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -164,6 +166,7 @@ class _OfflineWeightEntryScreenState extends State<OfflineWeightEntryScreen> {
                     ),
                   ),
           ],
+        ),
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../utils/custom_snackbar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import 'auth_gate.dart';
@@ -48,14 +49,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _signup() async {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all basic fields')));
+      CustomSnackBar.showError(context, 'Please fill all basic fields');
       return;
     }
 
     // Validation for Collector
     if (_selectedRole == 'collector') {
       if (_factoryCodeController.text.isEmpty || _selectedRoute == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Collectors must provide Factory Code and Route')));
+        CustomSnackBar.showError(context, 'Collectors must provide Factory Code and Route');
         return;
       }
     }
@@ -63,7 +64,7 @@ class _SignupScreenState extends State<SignupScreen> {
     // Validation for Farmer if they chose to link
     if (_selectedRole == 'farmer' && _linkFactory) {
       if (_factoryCodeController.text.isEmpty || _selectedRoute == null || _supplierNumberController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please complete Factory linking details')));
+        CustomSnackBar.showError(context, 'Please complete Factory linking details');
         return;
       }
     }
@@ -91,9 +92,7 @@ class _SignupScreenState extends State<SignupScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Signup Failed: $e')),
-      );
+      CustomSnackBar.showError(context, 'Signup Failed: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

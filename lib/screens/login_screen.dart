@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../utils/custom_snackbar.dart';
 import '../services/auth_service.dart';
 import 'auth_gate.dart';
 import 'signup_screen.dart';
+import 'scan_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,9 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Failed: $e')),
-      );
+      CustomSnackBar.showError(context, 'Login Failed: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.eco_outlined, color: Colors.white, size: 30),
-                              Text('FARM', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                              Text('AGRO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                             ],
                           ),
                         ),
@@ -112,6 +112,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           },
                           child: const Text('Don\'t have an account? Sign Up', style: TextStyle(color: Colors.white)),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const ScanHomeScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.no_accounts, color: Colors.white),
+                          label: const Text('Use Without Account (Guest Mode)', style: TextStyle(color: Colors.white)),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.white),
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
                         ),
                       ],
                     ),

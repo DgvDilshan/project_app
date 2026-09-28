@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/custom_snackbar.dart';
 import '../main.dart'; // for isSinhalaMode
 import '../services/local_database_helper.dart';
 import '../services/auth_service.dart';
@@ -46,70 +47,75 @@ class _HistoryTabState extends State<HistoryTab> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isSinhala ? 'අස්වනු ඉතිහාසය (Passbook)' : 'Digital Passbook'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                isSinhala ? 'ඔබගේ ලබාදීම් වාර්තාව' : 'Your Supply Records',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    try {
-                      await SyncManager.instance.syncData();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sync completed!')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Sync Error: $e')),
-                        );
-                      }
-                    }
-                    await _loadHistory();
-                  },
-                  child: _isLoading 
-                    ? const Center(child: CircularProgressIndicator())
-                    : _harvests.isEmpty
-                      ? ListView( // Use ListView so RefreshIndicator works
-                          children: [
-                            const SizedBox(height: 100),
-                            Center(
-                              child: Text(isSinhala ? 'තවමත් වාර්තා නොමැත.' : 'No records yet.'),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: _harvests.length,
-                          itemBuilder: (context, index) {
-                            final item = _harvests[index];
-                            // Simple date formatting
-                            final dateStr = item['recorded_at'].toString().split('T').first;
-                            return _HistoryItem(
-                              date: dateStr,
-                              weight: '${item['weight_kg']} Kg',
-                            );
-                          },
-                        ),
-                ),
-              ),
-            ],
+    return ValueListenableBuilder<bool>(
+      valueListenable: isSinhalaMode,
+      builder: (context, isSinhalaModeVal, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(isSinhala ? 'අස්වනු ඉතිහාසය (Passbook)' : 'Digital Passbook'),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    isSinhala ? 'ඔබගේ ලබාදීම් වාර්තාව' : 'Your Supply Records',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        try {
+                          await SyncManager.instance.syncData();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Sync completed!')),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Sync Error: $e')),
+                            );
+                          }
+                        }
+                        await _loadHistory();
+                      },
+                      child: _isLoading 
+                        ? const Center(child: CircularProgressIndicator())
+                        : _harvests.isEmpty
+                          ? ListView( // Use ListView so RefreshIndicator works
+                              children: [
+                                const SizedBox(height: 100),
+                                Center(
+                                  child: Text(isSinhala ? 'තවමත් වාර්තා නොමැත.' : 'No records yet.'),
+                                ),
+                              ],
+                            )
+                          : ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: _harvests.length,
+                              itemBuilder: (context, index) {
+                                final item = _harvests[index];
+                                // Simple date formatting
+                                final dateStr = item['recorded_at'].toString().split('T').first;
+                                return _HistoryItem(
+                                  date: dateStr,
+                                  weight: '${item['weight_kg']} Kg',
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

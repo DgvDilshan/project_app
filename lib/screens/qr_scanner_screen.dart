@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/custom_snackbar.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'offline_weight_entry_screen.dart';
 

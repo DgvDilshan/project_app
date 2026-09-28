@@ -1,8 +1,11 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
 import 'auth_gate.dart';
 import 'digital_id_screen.dart';
+import 'help_support_screen.dart';
+import '../widgets/update_profile_dialog.dart';
 import '../services/sync_manager.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,6 +21,8 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab> {
   String _userName = 'Farmer';
   String _userEmail = '';
+  String _routeName = '';
+  String _supplierNumber = '';
   double _totalMonthlyKg = 0;
   bool _isLoading = true;
 
@@ -50,9 +55,28 @@ class _ProfileTabState extends State<ProfileTab> {
         }
       }
 
+      
+      String rName = cache['route_name'] ?? '';
+      String sNumber = cache['supplier_number'] ?? '';
+      if (farmerId != null) {
+          try {
+              final profile = await Supabase.instance.client.from('profiles').select('route_name, supplier_number').eq('id', farmerId).single();
+              rName = profile['route_name']?.toString() ?? 'No Route';
+              sNumber = profile['supplier_number']?.toString() ?? 'No Supplier No';
+              // Update cache with latest
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('route_name', rName);
+              await prefs.setString('supplier_number', sNumber);
+          } catch (_) {
+              // Fallback to cache if offline (already set above)
+          }
+      }
+      
       setState(() {
         _userName = cache['user_name'] ?? 'Farmer';
         _userEmail = user?.email ?? 'Unknown Email';
+        _routeName = rName;
+        _supplierNumber = sNumber;
         _totalMonthlyKg = total;
         _isLoading = false;
       });
@@ -84,7 +108,37 @@ class _ProfileTabState extends State<ProfileTab> {
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
-              child: Column(
+              child: _userName == 'Farmer' && _userEmail == 'Unknown Email' // Simple Guest check
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      const Icon(Icons.no_accounts, size: 80, color: Colors.grey),
+                      const SizedBox(height: 24),
+                      Text(
+                        isSinhalaMode.value ? 'අමුත්තෙකුගේ ගිණුම' : 'Guest Account',
+                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        isSinhalaMode.value 
+                          ? 'ඔබ දැනට ලියාපදිංචි වී නොමැත. ඔබේ පැතිකඩ සහ දළු විස්තර බැලීමට කරුණාකර ලියාපදිංචි වන්න.' 
+                          : 'You are using a guest account. Please sign up to view your profile and harvest records.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const AuthGate()),
+                            (route) => false,
+                          );
+                        },
+                        child: Text(isSinhalaMode.value ? 'ලියාපදිංචි වන්න / ඇතුල් වන්න' : 'Sign Up / Log In'),
+                      ),
+                    ],
+                  )
+                : Column(
                 children: [
                   const CircleAvatar(
                     radius: 48,
@@ -100,6 +154,20 @@ class _ProfileTabState extends State<ProfileTab> {
                     _userEmail,
                     style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
+                  const SizedBox(height: 8),
+                  if (_supplierNumber.isNotEmpty && _supplierNumber != 'No Supplier No')
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Text(
+                        isSinhala ? 'සැපයුම්කරු අංකය: $_supplierNumber  |  මාර්ගය: $_routeName' : 'Supplier No: $_supplierNumber  |  Route: $_routeName',
+                        style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.w600, fontSize: 12),
+                      ),
+                    ),
                   const SizedBox(height: 32),
                   
                   // Total KGs summary card
@@ -147,6 +215,33 @@ class _ProfileTabState extends State<ProfileTab> {
                     ),
                   ),
               
+              const SizedBox(height: 24),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final cache = await AuthService.instance.getCachedUser();
+                    if (!context.mounted) return;
+                    final result = await showDialog(
+                      context: context,
+                      builder: (_) => UpdateProfileDialog(
+                        currentFactoryCode: cache['factory_code'],
+                        currentRoute: cache['route_name'],
+                        currentSupplierNo: cache['supplier_number'],
+                        isFarmer: true,
+                      ),
+                    );
+                    if (result == true) {
+                      _loadProfileData(); // reload
+                    }
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: Text(isSinhala ? 'ගිණුමේ විස්තර යාවත්කාලීන කරන්න' : 'Update Profile Details'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: cs.primaryContainer,
+                    foregroundColor: cs.onPrimaryContainer,
+                  ),
+                ),
+              ),
               const SizedBox(height: 32),
               _ProfileMenuItem(
                 icon: Icons.qr_code_2,
@@ -157,15 +252,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   );
                 },
               ),
-              _ProfileMenuItem(
-                icon: Icons.map_outlined,
-                title: isSinhala ? 'මගේ වත්ත (අක්කර 1.5)' : 'My Estate (1.5 Acres)',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(isSinhala ? 'ඉදිරියේදී බලාපොරොත්තු වන්න' : 'Coming soon!'),
-                  ));
-                },
-              ),
+
               _ProfileMenuItem(
                 icon: Icons.language,
                 title: isSinhala ? 'භාෂාව වෙනස් කරන්න (Language)' : 'Change Language',
@@ -175,11 +262,11 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
               _ProfileMenuItem(
                 icon: Icons.help_outline,
-                title: isSinhala ? 'උදව්' : 'Help & Support',
+                title: isSinhala ? 'උදව් සහ සහාය' : 'Help & Support',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(isSinhala ? 'අප අමතන්න: 011-2345678' : 'Contact us: 011-2345678'),
-                  ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                  );
                 },
               ),
               _ProfileMenuItem(

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../widgets/language_toggle.dart';
 import '../main.dart';
 import '../localization/app_translations.dart';
 import 'scan_review_screen.dart';
@@ -41,26 +41,31 @@ class _ScanHomeScreenState extends State<ScanHomeScreen>
   @override
   Widget build(BuildContext context) {
     bool isSinhala = isSinhalaMode.value;
-    return Scaffold(
-      body: IndexedStack(
-        index: _tabIndex,
-        children: [
-          _HomeTab(controller: _controller),
-          const HistoryTab(),
-          const TipsTab(),
-          const ProfileTab(),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tabIndex,
-        onDestinationSelected: (i) => setState(() => _tabIndex = i),
-        destinations: [
-          NavigationDestination(icon: const Icon(Icons.home_outlined), label: isSinhala ? 'මුල් පිටුව' : 'Home'),
-          NavigationDestination(icon: const Icon(Icons.history), label: isSinhala ? 'ඉතිහාසය' : 'History'),
-          NavigationDestination(icon: const Icon(Icons.spa_outlined), label: isSinhala ? 'උපදෙස්' : 'Tips'),
-          NavigationDestination(icon: const Icon(Icons.person_outline), label: isSinhala ? 'ගිණුම' : 'Profile'),
-        ],
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: isSinhalaMode,
+      builder: (context, isSinhalaModeVal, child) {
+        return Scaffold(
+          body: IndexedStack(
+            index: _tabIndex,
+            children: [
+              _HomeTab(controller: _controller),
+              const HistoryTab(),
+              const TipsTab(),
+              const ProfileTab(),
+            ],
+          ),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _tabIndex,
+            onDestinationSelected: (i) => setState(() => _tabIndex = i),
+            destinations: [
+              NavigationDestination(icon: const Icon(Icons.home_outlined), label: isSinhala ? 'මුල් පිටුව' : 'Home'),
+              NavigationDestination(icon: const Icon(Icons.history), label: isSinhala ? 'ඉතිහාසය' : 'History'),
+              NavigationDestination(icon: const Icon(Icons.spa_outlined), label: isSinhala ? 'උපදෙස්' : 'Tips'),
+              NavigationDestination(icon: const Icon(Icons.person_outline), label: isSinhala ? 'ගිණුම' : 'Profile'),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -95,166 +100,154 @@ class _HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    bool isSinhala = isSinhalaMode.value;
+        final theme = Theme.of(context);
+        final cs = theme.colorScheme;
+        bool isSinhala = isSinhalaMode.value;
 
-    return SafeArea(
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    cs.surface,
-                    cs.primaryContainer.withValues(alpha: 0.32),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: 'Menu',
-                      onPressed: () {},
-                      icon: const Icon(Icons.menu),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {
-                        isSinhalaMode.value = !isSinhalaMode.value;
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: cs.primaryContainer,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                      child: Text(
-                        isSinhala ? 'EN / සිං' : 'සිං / EN',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: cs.primary),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      tooltip: 'Notifications',
-                      onPressed: () {},
-                      icon: const Icon(Icons.notifications_none_outlined),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Text(isSinhala ? 'ආයුබෝවන්' : 'Hello, User', style: theme.textTheme.titleMedium),
-                    const SizedBox(width: 8),
-                    Icon(Icons.spa, color: cs.primary, size: 20),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                _HeroSection(controller: controller),
-                const SizedBox(height: 14),
-                _DetectDiseaseCard(
-                  controller: controller,
-                  onTap: () => _showDetectDiseaseSheet(context),
-                ),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PickupRequestScreen()));
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC8E6C9), // Slightly lighter green
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(Icons.local_shipping_outlined, color: Colors.green.shade800, size: 28),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isSinhala ? 'දළු ලබාදීම' : 'Request Pickup',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                isSinhala 
-                                  ? 'ඔබගේ තේ දළු ලබාදීම සඳහා එකතු කරන්නෙකු ගෙන්වා ගන්න.' 
-                                  : 'Request a collector to pick up your harvest.',
-                                style: TextStyle(color: Colors.black87.withOpacity(0.7), fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.chevron_right, color: Colors.green.shade800),
-                        ),
+        return SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        cs.surface,
+                        cs.primaryContainer.withValues(alpha: 0.32),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                Row(
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        isSinhala ? 'සුලබ තේ රෝග' : 'Common Tea Diseases',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                    Row(
+                      children: [
+                        IconButton(
+                          tooltip: 'Menu',
+                          onPressed: () {},
+                          icon: const Icon(Icons.menu),
+                        ),
+                        const Spacer(),
+                        const LanguageToggle(),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          tooltip: 'Notifications',
+                          onPressed: () {},
+                          icon: const Icon(Icons.notifications_none_outlined),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Text(isSinhala ? 'ආයුබෝවන්' : 'Hello, User', style: theme.textTheme.titleMedium),
+                        const SizedBox(width: 8),
+                        Icon(Icons.spa, color: cs.primary, size: 20),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _HeroSection(controller: controller),
+                    const SizedBox(height: 14),
+                    _DetectDiseaseCard(
+                      controller: controller,
+                      onTap: () => _showDetectDiseaseSheet(context),
+                    ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PickupRequestScreen()));
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC8E6C9), // Slightly lighter green
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(Icons.local_shipping_outlined, color: Colors.green.shade800, size: 28),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isSinhala ? 'දළු ලබාදීම' : 'Request Pickup',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    isSinhala 
+                                      ? 'ඔබගේ තේ දළු ලබාදීම සඳහා එකතු කරන්නෙකු ගෙන්වා ගන්න.' 
+                                      : 'Request a collector to pick up your harvest.',
+                                    style: TextStyle(color: Colors.black87.withOpacity(0.7), fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.chevron_right, color: Colors.green.shade800),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    TextButton.icon(
-                      onPressed: () {},
-                      label: Text(isSinhala ? 'සියල්ල බලන්න' : 'View All'),
-                      icon: const Icon(Icons.chevron_right),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isSinhala ? 'සුලබ තේ රෝග' : 'Common Tea Diseases',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {},
+                          label: Text(isSinhala ? 'සියල්ල බලන්න' : 'View All'),
+                          icon: const Icon(Icons.chevron_right),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const _CommonDiseasesRow(),
+                    const SizedBox(height: 18),
+                    _BottomBanner(controller: controller),
+                    const SizedBox(height: 12),
+                    Text(
+                      isSinhala 
+                        ? 'සටහන: මෙම යෙදුම තීරණ ගැනීමට සහාය වීම සඳහා පමණි, එය සහතිකයක් නොවේ. බරපතල රෝග ලක්ෂණ ඇත්නම්, සුදුසුකම් ලත් කෘෂි නිලධාරියෙකු අමතන්න.'
+                        : 'Note: This app is for decision support, not a guarantee. If severe symptoms appear, contact a qualified field officer.',
+                      style: theme.textTheme.bodySmall,
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                const _CommonDiseasesRow(),
-                const SizedBox(height: 18),
-                _BottomBanner(controller: controller),
-                const SizedBox(height: 12),
-                Text(
-                  isSinhala 
-                    ? 'සටහන: මෙම යෙදුම තීරණ ගැනීමට සහාය වීම සඳහා පමණි, එය සහතිකයක් නොවේ. බරපතල රෝග ලක්ෂණ ඇත්නම්, සුදුසුකම් ලත් කෘෂි නිලධාරියෙකු අමතන්න.'
-                    : 'Note: This app is for decision support, not a guarantee. If severe symptoms appear, contact a qualified field officer.',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
   }
 }
 
@@ -309,125 +302,125 @@ class _HeroSectionState extends State<_HeroSection> {
 
   @override
   Widget build(BuildContext context) {
-    bool isSinhala = isSinhalaMode.value;
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+        bool isSinhala = isSinhalaMode.value;
+        final theme = Theme.of(context);
+        final cs = theme.colorScheme;
 
-    return SizedBox(
-      height: 250,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: Stack(
-          children: [
-            // 1. Image Slider Background
-            Positioned.fill(
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(), // Auto-slide only
-                itemCount: _images.length,
-                itemBuilder: (context, index) {
-                  return AnimatedBuilder(
-                    animation: widget.controller,
-                    builder: (context, child) {
-                       // Very subtle zoom effect
-                       final scale = 1.0 + (widget.controller.value * 0.05);
-                       return Transform.scale(
-                         scale: scale,
-                         child: child,
-                       );
-                    },
-                    child: Image.asset(
-                      _images[index],
-                      fit: BoxFit.cover,
-                    ),
-                  );
-                },
-              ),
-            ),
-            // 2. Gradient Overlay for Text Readability
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.8),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // 3. Text Content
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: 40,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        isSinhala ? 'ආයුබෝවන්' : 'Hello, User', 
-                        style: theme.textTheme.titleMedium?.copyWith(color: Colors.white70)
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(Icons.spa, size: 18, color: cs.primary),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  RichText(
-                    text: TextSpan(
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
-                        color: Colors.white,
-                      ),
-                      children: [
-                        TextSpan(text: isSinhala ? 'තේ රෝග\n' : 'Tea Disease\n'),
-                        TextSpan(
-                          text: isSinhala ? 'හඳුනාගැනීම' : 'Detection',
-                          style: TextStyle(color: cs.primary),
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.28,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: Stack(
+              children: [
+                // 1. Image Slider Background
+                Positioned.fill(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(), // Auto-slide only
+                    itemCount: _images.length,
+                    itemBuilder: (context, index) {
+                      return AnimatedBuilder(
+                        animation: widget.controller,
+                        builder: (context, child) {
+                           // Very subtle zoom effect
+                           final scale = 1.0 + (widget.controller.value * 0.05);
+                           return Transform.scale(
+                             scale: scale,
+                             child: child,
+                           );
+                        },
+                        child: Image.asset(
+                          _images[index],
+                          fit: BoxFit.cover,
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isSinhala ? 'තේ වගාවේ රෝග කල්තියා හඳුනාගෙන වගාව ආරක්ෂා කරගන්න.' : 'Detect tea plant diseases early and keep your plants healthy.',
-                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
-            // 4. Dots Indicator
-            Positioned(
-              bottom: 16,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _images.length,
-                  (index) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    height: 6,
-                    width: _currentPage == index ? 20 : 6,
+                ),
+                // 2. Gradient Overlay for Text Readability
+                Positioned.fill(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: _currentPage == index ? cs.primary : Colors.white54,
-                      borderRadius: BorderRadius.circular(3),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.8),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+                // 3. Text Content
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  bottom: 40,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            isSinhala ? 'ආයුබෝවන්' : 'Hello, User', 
+                            style: theme.textTheme.titleMedium?.copyWith(color: Colors.white70)
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(Icons.spa, size: 18, color: cs.primary),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            height: 1.1,
+                            color: Colors.white,
+                          ),
+                          children: [
+                            TextSpan(text: isSinhala ? 'තේ රෝග\n' : 'Tea Disease\n'),
+                            TextSpan(
+                              text: isSinhala ? 'හඳුනාගැනීම' : 'Detection',
+                              style: TextStyle(color: cs.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        isSinhala ? 'තේ වගාවේ රෝග කල්තියා හඳුනාගෙන වගාව ආරක්ෂා කරගන්න.' : 'Detect tea plant diseases early and keep your plants healthy.',
+                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                // 4. Dots Indicator
+                Positioned(
+                  bottom: 16,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _images.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        height: 6,
+                        width: _currentPage == index ? 20 : 6,
+                        decoration: BoxDecoration(
+                          color: _currentPage == index ? cs.primary : Colors.white54,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
   }
 }
 
@@ -439,90 +432,90 @@ class _DetectDiseaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+        final theme = Theme.of(context);
+        final cs = theme.colorScheme;
 
-    final arrowPulse = Tween<double>(
-      begin: 0.98,
-      end: 1.05,
-    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
+        final arrowPulse = Tween<double>(
+          begin: 0.98,
+          end: 1.05,
+        ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: onTap,
-      child: Ink(
-        decoration: BoxDecoration(
+        return InkWell(
           borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [cs.primaryContainer, cs.primary.withValues(alpha: 0.85)],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                height: 64,
-                width: 64,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  color: cs.surface.withValues(alpha: 0.85),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.camera_alt_outlined,
-                  color: cs.primary,
-                  size: 30,
-                ),
+          onTap: onTap,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [cs.primaryContainer, cs.primary.withValues(alpha: 0.85)],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppTranslations.get('proceed_button', isSinhalaMode.value).replaceAll('Disease', '').trim(),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: cs.onPrimaryContainer,
-                      ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    height: 64,
+                    width: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      color: cs.surface.withValues(alpha: 0.85),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      isSinhalaMode.value 
-                        ? 'රෝග හඳුනාගැනීම සඳහා තේ කොළයක ඡායාරූපයක් ලබා දෙන්න.'
-                        : 'Upload or capture a photo\nof tea leaf to detect disease.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: cs.onPrimaryContainer,
-                        height: 1.25,
-                      ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      color: cs.primary,
+                      size: 30,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              AnimatedBuilder(
-                animation: controller,
-                builder: (context, child) {
-                  return Transform.scale(scale: arrowPulse.value, child: child);
-                },
-                child: Container(
-                  height: 44,
-                  width: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: cs.surface.withValues(alpha: 0.85),
                   ),
-                  child: Icon(Icons.chevron_right, color: cs.primary, size: 26),
-                ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppTranslations.get('proceed_button', isSinhalaMode.value).replaceAll('Disease', '').trim(),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: cs.onPrimaryContainer,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          isSinhalaMode.value 
+                            ? 'රෝග හඳුනාගැනීම සඳහා තේ කොළයක ඡායාරූපයක් ලබා දෙන්න.'
+                            : 'Upload or capture a photo\nof tea leaf to detect disease.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: cs.onPrimaryContainer,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  AnimatedBuilder(
+                    animation: controller,
+                    builder: (context, child) {
+                      return Transform.scale(scale: arrowPulse.value, child: child);
+                    },
+                    child: Container(
+                      height: 44,
+                      width: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: cs.surface.withValues(alpha: 0.85),
+                      ),
+                      child: Icon(Icons.chevron_right, color: cs.primary, size: 26),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        );
   }
 }
 
@@ -533,19 +526,19 @@ class _PickOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isSinhala = isSinhalaMode.value;
-    final label = source == ScanSource.camera
-        ? AppTranslations.get('take_photo', isSinhala)
-        : AppTranslations.get('pick_gallery', isSinhala);
-    final icon = source == ScanSource.camera
-        ? Icons.camera_alt_outlined
-        : Icons.photo_outlined;
+        bool isSinhala = isSinhalaMode.value;
+        final label = source == ScanSource.camera
+            ? AppTranslations.get('take_photo', isSinhala)
+            : AppTranslations.get('pick_gallery', isSinhala);
+        final icon = source == ScanSource.camera
+            ? Icons.camera_alt_outlined
+            : Icons.photo_outlined;
 
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      onTap: () => Navigator.of(context).pop(source),
-    );
+        return ListTile(
+          leading: Icon(icon),
+          title: Text(label),
+          onTap: () => Navigator.of(context).pop(source),
+        );
   }
 }
 
@@ -663,15 +656,15 @@ class _CommonDiseasesRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 192,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) => _DiseaseCard(data: _items[index]),
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemCount: _items.length,
-      ),
-    );
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.22,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) => _DiseaseCard(data: _items[index]),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemCount: _items.length,
+          ),
+        );
   }
 }
 
@@ -704,77 +697,77 @@ class _DiseaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isSinhala = isSinhalaMode.value;
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+        bool isSinhala = isSinhalaMode.value;
+        final theme = Theme.of(context);
+        final cs = theme.colorScheme;
 
-    return SizedBox(
-      width: 156,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => DiseaseInfoScreen(
-                  title: isSinhala ? data.titleSi : data.titleEn,
-                  subtitle: data.subtitle,
-                  assetPath: data.asset,
-                  symptoms: isSinhala ? data.symptomsSi : data.symptomsEn,
-                  recommendations: isSinhala ? data.recommendationsSi : data.recommendationsEn,
-                ),
-              ),
-            );
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Container(
-                  color: cs.surfaceContainerHighest,
-                  padding: data.asset.endsWith('.svg') ? const EdgeInsets.all(12) : EdgeInsets.zero,
-                  child: data.asset.endsWith('.svg') 
-                    ? SvgPicture.asset(
-                        data.asset,
-                        fit: BoxFit.contain,
-                        semanticsLabel: isSinhala ? data.titleSi : data.titleEn,
-                      )
-                    : Image.asset(
-                        data.asset,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isSinhala ? data.titleSi : data.titleEn,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+        return SizedBox(
+          width: 156,
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => DiseaseInfoScreen(
+                      title: isSinhala ? data.titleSi : data.titleEn,
+                      subtitle: data.subtitle,
+                      assetPath: data.asset,
+                      symptoms: isSinhala ? data.symptomsSi : data.symptomsEn,
+                      recommendations: isSinhala ? data.recommendationsSi : data.recommendationsEn,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      data.subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall,
+                  ),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Container(
+                      color: cs.surfaceContainerHighest,
+                      padding: data.asset.endsWith('.svg') ? const EdgeInsets.all(12) : EdgeInsets.zero,
+                      child: data.asset.endsWith('.svg') 
+                        ? SvgPicture.asset(
+                            data.asset,
+                            fit: BoxFit.contain,
+                            semanticsLabel: isSinhala ? data.titleSi : data.titleEn,
+                          )
+                        : Image.asset(
+                            data.asset,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
                     ),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isSinhala ? data.titleSi : data.titleEn,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          data.subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        );
   }
 }
 
@@ -785,70 +778,70 @@ class _BottomBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+        final theme = Theme.of(context);
+        final cs = theme.colorScheme;
 
-    final floatX = Tween<double>(
-      begin: -2,
-      end: 2,
-    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
+        final floatX = Tween<double>(
+          begin: -2,
+          end: 2,
+        ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        color: cs.primaryContainer.withValues(alpha: 0.55),
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 48,
-            width: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: cs.surface.withValues(alpha: 0.9),
-            ),
-            child: Icon(Icons.shield_outlined, color: cs.primary),
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            color: cs.primaryContainer.withValues(alpha: 0.55),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isSinhalaMode.value ? 'නිරෝගී වගාවක්, වඩා හොඳ අනාගතයක්' : 'Healthy Plant, Better Future',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                height: 48,
+                width: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: cs.surface.withValues(alpha: 0.9),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  isSinhalaMode.value 
-                    ? 'නිතිපතා පරීක්ෂා කිරීමෙන් සහ කල්තියා හඳුනාගැනීමෙන් හොඳ අස්වැන්නක් ලබාගත හැක.'
-                    : 'Regular monitoring and early detection helps in better yield and quality.',
-                  style: theme.textTheme.bodySmall,
+                child: Icon(Icons.shield_outlined, color: cs.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isSinhalaMode.value ? 'නිරෝගී වගාවක්, වඩා හොඳ අනාගතයක්' : 'Healthy Plant, Better Future',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      isSinhalaMode.value 
+                        ? 'නිතිපතා පරීක්ෂා කිරීමෙන් සහ කල්තියා හඳුනාගැනීමෙන් හොඳ අස්වැන්නක් ලබාගත හැක.'
+                        : 'Regular monitoring and early detection helps in better yield and quality.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              AnimatedBuilder(
+                animation: controller,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(floatX.value, 0),
+                    child: child,
+                  );
+                },
+                child: SizedBox(
+                  height: 56,
+                  width: 56,
+                  child: SvgPicture.asset('assets/images/tea_leaf.svg'),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          AnimatedBuilder(
-            animation: controller,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(floatX.value, 0),
-                child: child,
-              );
-            },
-            child: SizedBox(
-              height: 56,
-              width: 56,
-              child: SvgPicture.asset('assets/images/tea_leaf.svg'),
-            ),
-          ),
-        ],
-      ),
-    );
+        );
   }
 }
 
@@ -859,14 +852,14 @@ class _PlaceholderTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(
-          '$title will appear here.',
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-      ),
-    );
+        return Scaffold(
+          appBar: AppBar(title: Text(title)),
+          body: Center(
+            child: Text(
+              '$title will appear here.',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        );
   }
 }

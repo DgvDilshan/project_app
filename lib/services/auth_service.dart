@@ -9,7 +9,7 @@ class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // Cache user data offline
-  Future<void> _cacheUserSession(String userId, String role, String fullName, {int? routeIndex}) async {
+  Future<void> _cacheUserSession(String userId, String role, String fullName, {int? routeIndex, String? factoryCode, String? routeName, String? supplierNumber}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_id', userId);
     await prefs.setString('user_role', role);
@@ -18,7 +18,14 @@ class AuthService {
       await prefs.setInt('route_index', routeIndex);
     } else {
       await prefs.remove('route_index');
+    await prefs.remove('factory_code');
+    await prefs.remove('route_name');
+    await prefs.remove('supplier_number');
     }
+    
+    if (factoryCode != null) await prefs.setString('factory_code', factoryCode);
+    if (routeName != null) await prefs.setString('route_name', routeName);
+    if (supplierNumber != null) await prefs.setString('supplier_number', supplierNumber);
   }
 
   Future<void> clearSession() async {
@@ -27,6 +34,9 @@ class AuthService {
     await prefs.remove('user_role');
     await prefs.remove('user_name');
     await prefs.remove('route_index');
+    await prefs.remove('factory_code');
+    await prefs.remove('route_name');
+    await prefs.remove('supplier_number');
     await _supabase.auth.signOut();
   }
 
@@ -37,7 +47,29 @@ class AuthService {
       'user_role': prefs.getString('user_role'),
       'user_name': prefs.getString('user_name'),
       'route_index': prefs.getInt('route_index')?.toString(),
+      'factory_code': prefs.getString('factory_code'),
+      'route_name': prefs.getString('route_name'),
+      'supplier_number': prefs.getString('supplier_number'),
     };
+  }
+
+    Future<void> updateProfileDetails({String? factoryCode, String? routeName, String? supplierNumber}) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('Not logged in');
+    
+    final updates = <String, dynamic>{};
+    if (factoryCode != null) updates['factory_code'] = factoryCode;
+    if (routeName != null) updates['route_name'] = routeName;
+    if (supplierNumber != null) updates['supplier_number'] = supplierNumber;
+
+    if (updates.isNotEmpty) {
+      await _supabase.from('profiles').update(updates).eq('id', user.id);
+      
+      final prefs = await SharedPreferences.getInstance();
+      if (factoryCode != null) await prefs.setString('factory_code', factoryCode);
+      if (routeName != null) await prefs.setString('route_name', routeName);
+      if (supplierNumber != null) await prefs.setString('supplier_number', supplierNumber);
+    }
   }
 
   Future<AuthResponse> login(String email, String password) async {
@@ -48,8 +80,11 @@ class AuthService {
       final role = profile['role'] as String;
       final name = profile['full_name'] as String? ?? 'User';
       final routeIndex = profile['route_index'] as int?;
+      final factoryCode = profile['factory_code'] as String?;
+      final routeName = profile['route_name'] as String?;
+      final supplierNumber = profile['supplier_number'] as String?;
       
-      await _cacheUserSession(response.user!.id, role, name, routeIndex: routeIndex);
+      await _cacheUserSession(response.user!.id, role, name, routeIndex: routeIndex, factoryCode: factoryCode, routeName: routeName, supplierNumber: supplierNumber);
     }
     return response;
   }
@@ -72,7 +107,7 @@ class AuthService {
         if (supplierNumber != null && supplierNumber.isNotEmpty) 'supplier_number': supplierNumber,
       });
 
-      await _cacheUserSession(response.user!.id, role, fullName, routeIndex: routeIndex);
+      await _cacheUserSession(response.user!.id, role, fullName, routeIndex: routeIndex, factoryCode: factoryCode, routeName: routeName, supplierNumber: supplierNumber);
     }
     return response;
   }

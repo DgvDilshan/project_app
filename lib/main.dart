@@ -27,20 +27,15 @@ class TeaDiseaseApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: isSinhalaMode,
-      builder: (context, isSinhala, child) {
-        return MaterialApp(
-          title: AppTranslations.get('app_title', isSinhala),
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-          ),
-          home: const AuthGate(),
-        );
-      },
+    bool isSinhala = isSinhalaMode.value;
+    return MaterialApp(
+      title: AppTranslations.get('app_title', isSinhala),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+      ),
+      home: const AuthGate(),
     );
   }
 }
-

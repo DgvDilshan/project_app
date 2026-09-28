@@ -1,7 +1,9 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
 import 'auth_gate.dart';
+import '../widgets/update_profile_dialog.dart';
 import '../services/sync_manager.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -99,8 +101,32 @@ class _CollectorProfileTabState extends State<CollectorProfileTab> {
                         _userEmail,
                         style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                       ),
+
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final cache = await AuthService.instance.getCachedUser();
+                          if (!context.mounted) return;
+                          final result = await showDialog(
+                            context: context,
+                            builder: (_) => UpdateProfileDialog(
+                              currentFactoryCode: cache['factory_code'],
+                              currentRoute: cache['route_name'],
+                              isFarmer: false,
+                            ),
+                          );
+                          if (result == true) {
+                            _loadProfileData();
+                          }
+                        },
+                        icon: const Icon(Icons.edit),
+                        label: Text(isSinhala ? 'ගිණුමේ විස්තර යාවත්කාලීන කරන්න' : 'Update Profile Details'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: cs.primaryContainer,
+                          foregroundColor: cs.onPrimaryContainer,
+                        ),
+                      ),
                       const SizedBox(height: 32),
-                      
                       Card(
                         elevation: 0,
                         color: cs.secondaryContainer.withValues(alpha: 0.5),

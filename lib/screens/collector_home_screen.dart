@@ -11,6 +11,7 @@ import 'qr_scanner_screen.dart';
 import 'collector_history_tab.dart';
 import 'collector_profile_tab.dart';
 import 'farmer_profile_for_collector_screen.dart'; // Import history tab
+import '../widgets/language_toggle.dart';
 
 class CollectorHomeScreen extends StatefulWidget {
   const CollectorHomeScreen({super.key});
@@ -93,11 +94,12 @@ class _CollectorHomeScreenState extends State<CollectorHomeScreen> with SingleTi
     try {
       final cache = await AuthService.instance.getCachedUser();
       final collectorId = cache['user_id'] as String?;
-      final collectorRouteStr = cache['route_index'] as String?;
+      final collectorRouteName = cache['route_name']?.toString().toLowerCase(); // Get directly from cache
+      final collectorFactoryCode = cache['factory_code']?.toString().toLowerCase();
 
       final response = await _supabase
           .from('pickup_requests')
-          .select('id, farmer_id, request_date, status, disease_flag, profiles(full_name, phone, route_index, plot_number)')
+          .select('id, farmer_id, request_date, status, disease_flag, profiles(full_name, phone, route_name, factory_code, supplier_number)')
           .eq('status', 'pending');
 
       List<Map<String, dynamic>> rawRequestsList = List<Map<String, dynamic>>.from(response);
@@ -105,14 +107,15 @@ class _CollectorHomeScreenState extends State<CollectorHomeScreen> with SingleTi
       
       for (var req in rawRequestsList) {
         final profile = req['profiles'] as Map<String, dynamic>?;
-        final reqRouteStr = profile?['route_index']?.toString();
-        // Filter out requests that do not belong to the collector's route
-        if (collectorRouteStr != null && reqRouteStr == collectorRouteStr) {
-          requestsList.add(req);
-        } else if (collectorRouteStr == null) {
-          // If collector didn't set a route, maybe show all (or none). Let's show all for safety.
+        final reqRouteStr = profile?['route_name']?.toString().toLowerCase();
+        final reqFactoryCodeStr = profile?['factory_code']?.toString().toLowerCase();
+        
+        // Filter out requests that do not belong to the collector's route OR factory
+        if (collectorRouteName != null && reqRouteStr == collectorRouteName &&
+            collectorFactoryCode != null && reqFactoryCodeStr == collectorFactoryCode) {
           requestsList.add(req);
         }
+        // If they do not match exactly (case-insensitively), we DO NOT add the request.
       }
 
       double totalKg = 0.0;
@@ -187,7 +190,7 @@ class _CollectorHomeScreenState extends State<CollectorHomeScreen> with SingleTi
                       bottomRight: Radius.circular(40),
                     ),
                     child: SizedBox(
-                      height: 320,
+                      height: MediaQuery.of(context).size.height * 0.35,
                       width: double.infinity,
                       child: Stack(
                         children: [
@@ -243,23 +246,16 @@ class _CollectorHomeScreenState extends State<CollectorHomeScreen> with SingleTi
                                 ),
                                 child: IconButton(
                                   icon: const Icon(Icons.person, color: Colors.white),
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const CollectorProfileTab()),
+                                    );
+                                  },
                                 ),
                               ),
                               Row(
                                 children: [
-                                  TextButton(
-                                    onPressed: () => isSinhalaMode.value = !isSinhalaMode.value,
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: Colors.white.withOpacity(0.2),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                    ),
-                                    child: Text(
-                                      isSinhala ? 'EN / සිං' : 'සිං / EN',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                                    ),
-                                  ),
+                                  const LanguageToggle(),
                                   const SizedBox(width: 8),
                                   Container(
                                     decoration: BoxDecoration(
@@ -485,7 +481,7 @@ class _CollectorHomeScreenState extends State<CollectorHomeScreen> with SingleTi
           extendBody: true,
           bottomNavigationBar: SafeArea(
             child: Container(
-              margin: const EdgeInsets.only(left: 60, right: 60, bottom: 16),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.95),
@@ -552,7 +548,8 @@ class _PickupCard extends StatelessWidget {
     bool isSinhala = isSinhalaMode.value;
 
     final profile = request['profiles'] as Map<String, dynamic>?;
-        final fullName = profile?['full_name'] ?? 'Unknown Farmer';
+    final fullName = profile?['full_name'] ?? 'Unknown Farmer';
+    final supplierNo = profile?['supplier_number']?.toString() ?? 'N/A';
     final plotNum = profile?['plot_number'] != null ? ' (Plot: ${profile!['plot_number']})' : '';
     final farmerName = '$fullName$plotNum';
     final phone = profile?['phone'] ?? 'No phone';
@@ -608,11 +605,22 @@ class _PickupCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
+                          Icon(Icons.numbers, size: 14, color: cs.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Expanded(child: Text('Supplier No: $supplierNo', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
                           Icon(Icons.calendar_today, size: 14, color: cs.primary),
                           const SizedBox(width: 4),
-                          Text(
-                            '${isSinhala ? 'දිනය' : 'Date'}: $dateStr', 
-                            style: theme.textTheme.bodySmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
+                          Expanded(
+                            child: Text(
+                              '${isSinhala ? 'දිනය' : 'Date'}: $dateStr', 
+                              style: theme.textTheme.bodySmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
